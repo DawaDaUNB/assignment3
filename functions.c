@@ -210,3 +210,64 @@ void addFToParent(Directory *parent, File *file){
         }
     }
 }
+
+Directory * findDirectoryByPath(Directory *root, const char *path) {
+    if (!root || !path || strlen(path) == 0) return NULL;
+    
+    // if path starts with '/', skip it
+    if (path[0] == '/') path++;
+
+    char *pathCopy = strdup(path);
+    char *token = strtok(pathCopy, "/");
+    Directory *current = root;
+
+    while (token != NULL && current != NULL) {
+        int found = 0;
+        for (int i = 0; i < current->capacityDirectories; i++) {
+            Directory *child = current->directories[i];
+            if (child && strcmp(child->name, token) == 0) {
+                current = child;
+                found = 1;
+                break;
+            }
+        }
+
+        if (!found) {
+            free(pathCopy);
+            return NULL;
+        }
+
+        token = strtok(NULL, "/");
+    }
+
+    free(pathCopy);
+    return current;
+}
+
+void printIndent(int depth) {
+    for (int i = 0; i < depth; i++) {
+        printf("  ");
+    }
+}
+
+void listDirectory(Directory *dir, int depth) {
+    if (!dir) return;
+
+    printIndent(depth);
+    printf("[DIR] %s\n", dir->name);
+
+    // Print files
+    for (int i = 0; i < dir->capacityFiles; i++) {
+        if (dir->files[i] != NULL) {
+            printIndent(depth + 1);
+            printf("[FILE] %s (%.2f KB)\n", dir->files[i]->name, dir->files[i]->size);
+        }
+    }
+
+    // recurse into subdirectories
+    for (int i = 0; i < dir->capacityDirectories; i++) {
+        if (dir->directories[i] != NULL) {
+            listDirectory(dir->directories[i], depth + 1);
+        }
+    }
+}
